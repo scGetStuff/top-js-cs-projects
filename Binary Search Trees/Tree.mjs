@@ -4,8 +4,9 @@ const cl = console.log;
 
 class Tree {
     constructor(arr = []) {
-        const set = new Set(arr.sort());
-        this.root = this.buildTree(Array.from(set));
+        arr = arr.sort((a, b) => a - b);
+        arr = Array.from(new Set(arr));
+        this.root = this.buildTree(arr);
     }
 
     buildTree(arr = []) {
