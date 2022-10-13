@@ -17,11 +17,9 @@ function doStuff() {
         // tree.insert(7);
         tree.prettyPrint();
         // cl(tree.find(3)?.toString());
-        tree.delete(1);
+        tree.delete(3);
         tree.prettyPrint();
     }
-
-
 }
 
 doStuff();

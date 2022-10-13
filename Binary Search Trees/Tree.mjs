@@ -15,21 +15,15 @@ class Tree {
     }
 
     delete(value) {
-        // TODO: root
-        if (this.root.data === value) return;
-
-        let parent = this.root;
-
-        // find the parent node
-        while (parent) {
-            if (isChild(parent, value)) break;
-            parent = nextNode(parent, value);
+        // TODO: this could put things in a bad state
+        // there are no requirements for handeling empty root
+        // the point is familarity with the BST algorithm, not coding defensivly
+        if (this.root.data === value) {
+            this.root = deleteNode(this.root);
+            return;
         }
-        if (!parent) return;
 
-        // TODO: first pass, dumb delete, add real cases
-        if (parent.left?.data === value) parent.left = null;
-        if (parent.right?.data === value) parent.right = null;
+        deleteChild(this.root, value);
     }
 
     find(value) {
@@ -90,6 +84,10 @@ function isChild(parent, value) {
     return value === parent.left?.data || value === parent.right?.data;
 }
 
+function isLeaf(node) {
+    return node.left === null && node.right === null;
+}
+
 function buildTree(arr = []) {
     if (arr.length === 0) return null;
 
@@ -116,6 +114,46 @@ function appendLeaf(curNode, newNode) {
         if (curNode.right) appendLeaf(curNode.right, newNode);
         else curNode.right = newNode;
     }
+}
+
+function deleteChild(parent, value) {
+    const node = nextNode(parent, value);
+
+    // remove child node
+    if (isChild(parent, value)) {
+        if (parent.left === node) parent.left = deleteNode(node, value);
+        if (parent.right === node) parent.right = deleteNode(node, value);
+        return;
+    }
+
+    // recrse untill you find the node
+    deleteChild(node, value);
+}
+
+function deleteNode(node) {
+    if (isLeaf(node)) return null;
+
+    // node with two children
+    // find smallest larger node and rewire stuff
+    if (node.left && node.right) {
+        let bigger = node.right;
+        let smallest = bigger;
+
+        while (smallest.left) {
+            bigger = smallest;
+            smallest = smallest.left;
+        }
+
+        node.data = smallest.data;
+        bigger.left = null; // this is incase it right sub-tree is a leaf
+        if (bigger !== smallest) bigger.left = smallest.right;
+
+        return node;
+    }
+
+    // node with single child
+    if (node.left) return node.left;
+    if (node.right) return node.right;
 }
 
 export { Tree };
