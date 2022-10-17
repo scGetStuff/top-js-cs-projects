@@ -9,6 +9,8 @@ class Tree {
         this.root = buildTree(arr);
     }
 
+    // TODO: i kind of hate the way i did this; stupid looking code in append
+    // brain stuck with a specific approach
     insert(value) {
         const newNode = new Node(value);
         appendLeaf(this.root, newNode);
@@ -36,21 +38,99 @@ class Tree {
         return node;
     }
 
-    levelOrder() {}
+    levelOrderIterative(cb = null) {
+        const out = [];
+        const discQ = [];
 
-    inorder() {}
+        discQ.push(this.root);
 
-    preorder() {}
+        while (discQ.length > 0) {
+            const len = discQ.length;
+            for (let i = 0; i < len; i++) {
+                const node = discQ.shift();
+                if (node.left) discQ.push(node.left);
+                if (node.right) discQ.push(node.right);
+                out.push(node.data);
+                if (cb) cb(node);
+            }
+        }
 
-    postorder() {}
+        return out;
+    }
 
-    height() {}
+    // TODO: brain won't do it, stuck with iterative
+    levelOrderRecurse(cb) {}
 
-    depth() {}
+    // Left, Root, Right
+    inorder(cb = null, node = this.root, out = []) {
+        if (node === null) return out;
 
-    isBalanced() {}
+        if (node.left) this.inorder(cb, node.left, out);
+        out.push(node.data);
+        if (node.right) this.inorder(cb, node.right, out);
 
-    rebalance() {}
+        return out;
+    }
+
+    // Root, Left, Right
+    preorder(cb = null, node = this.root, out = []) {
+        if (node === null) return out;
+
+        out.push(node.data);
+        if (node.left) this.preorder(cb, node.left, out);
+        if (node.right) this.preorder(cb, node.right, out);
+
+        return out;
+    }
+
+    // Left, Right, Root
+    postorder(cb = null, node = this.root, out = []) {
+        if (node === null) return out;
+
+        if (node.left) this.postorder(cb, node.left, out);
+        if (node.right) this.postorder(cb, node.right, out);
+        out.push(node.data);
+
+        return out;
+    }
+
+    height(node = this.root) {
+        if (node === null) return -1;
+
+        const left = this.height(node.left);
+        const right = this.height(node.right);
+
+        return Math.max(left, right) + 1;
+    }
+
+    depth(node) {
+        let test = this.root;
+        const value = node.data;
+        let count = 0;
+
+        while (test) {
+            if (test.data === value) break;
+            test = nextNode(test, value);
+            count++;
+        }
+
+        return count;
+    }
+
+    isBalanced(node = this.root) {
+        const left = this.height(node.left);
+        const right = this.height(node.right);
+        const diff = Math.abs(left - right);
+
+        return diff <= 1;
+    }
+
+    rebalance() {
+        // TODO: i doubt the intention was to double the memory
+        // probably suposed to reuse existing nodes by traversing the 
+        // same order and overwrite with values in the array
+        this.root = buildTree(this.levelOrderIterative());
+    }
 
     prettyPrint(node = this.root, prefix = "", isLeft = true) {
         if (node.right !== null) {
@@ -119,14 +199,12 @@ function appendLeaf(curNode, newNode) {
 function deleteChild(parent, value) {
     const node = nextNode(parent, value);
 
-    // remove child node
     if (isChild(parent, value)) {
         if (parent.left === node) parent.left = deleteNode(node, value);
         if (parent.right === node) parent.right = deleteNode(node, value);
         return;
     }
 
-    // recrse untill you find the node
     deleteChild(node, value);
 }
 
