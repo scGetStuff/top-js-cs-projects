@@ -11,18 +11,21 @@ function doStuff() {
     console.clear();
 
     createBoard();
+    cl("\rVertices");
     printBoard();
+    cl("\rEdges");
     printMoves();
 
     let squares = [];
-    // knightMoves([3, 3], [4, 3]);
-    squares = knightMoves([0, 0], [1, 2]);
+    squares = bfs([0, 0]);
+    cl("\rBFS [0,0]");
     cl(squares.map((sq) => sq.name).join("->"));
-    // squares = knightMoves([0, 0], [3, 3]);
-    // cl(
-    //     squares.reduce((p, c) => p + c.name + "->"),
-    //     ""
-    // );
+
+    squares = knightMoves([0, 0], [5, 7]);
+    squares = knightMoves([3, 3], [4, 3]);
+    squares = knightMoves([0, 0], [1, 2]);
+    squares = knightMoves([0, 0], [3, 3]);
+    squares = knightMoves([3, 3], [0, 0]);
 }
 
 // the board is an Adjacency List as a 2D array
@@ -42,21 +45,22 @@ function createBoard() {
     return board;
 }
 
-// TODO: i'm too stupid to make this suck less
+// at first i wanted to make this suck less
 // on second thought, i kind of like the simplicity;
 // define the 8 moves, then flilter out invalid
 function defineMoves(start = [0, 0]) {
     const moves = [];
-    const startPoint = new Point(start[0], start[1]);
+    const x = start[0];
+    const y = start[1];
 
-    moves.push(new Point(startPoint.x - 1, startPoint.y + 2));
-    moves.push(new Point(startPoint.x - 1, startPoint.y - 2));
-    moves.push(new Point(startPoint.x + 1, startPoint.y + 2));
-    moves.push(new Point(startPoint.x + 1, startPoint.y - 2));
-    moves.push(new Point(startPoint.x - 2, startPoint.y + 1));
-    moves.push(new Point(startPoint.x - 2, startPoint.y - 1));
-    moves.push(new Point(startPoint.x + 2, startPoint.y + 1));
-    moves.push(new Point(startPoint.x + 2, startPoint.y - 1));
+    moves.push(new Point(x - 1, y + 2));
+    moves.push(new Point(x - 1, y - 2));
+    moves.push(new Point(x + 1, y + 2));
+    moves.push(new Point(x + 1, y - 2));
+    moves.push(new Point(x - 2, y + 1));
+    moves.push(new Point(x - 2, y - 1));
+    moves.push(new Point(x + 2, y + 1));
+    moves.push(new Point(x + 2, y - 1));
 
     return moves.filter(
         (move) => move.x >= 0 && move.x < 8 && move.y >= 0 && move.y < 8
@@ -72,7 +76,7 @@ function printBoard() {
         }
         cl(line);
     }
-    cl("\r");
+    cl("");
 }
 
 function printMoves() {
@@ -80,35 +84,75 @@ function printMoves() {
     for (let i = LEN - 1; i >= 0; i--) {
         for (let j = 0; j < LEN; j++) {
             line = board[i][j].name + " ";
-            board[i][j].moves.forEach((point) => (line += point.toString()));
+            board[i][j].moves.forEach((point) => (line += point));
             cl(line);
         }
     }
-    cl("\r");
+    cl("");
 }
 
-// TODO: first pass, full bfs ignoring end
+// i had to look at other code to get the whole parents idea
+// i was stuck at having all the pieces defined and bfs,
+// but couldn't figure the path part
 function knightMoves(start = [0, 0], end = [1, 2]) {
-    const out = [];
     const discQ = [];
-    const visited = {};
+    const visited = new Set();
     const startSquare = getSquare(start[0], start[1]);
     const endSquare = getSquare(end[0], end[1]);
+    const paths = [];
+
+    // not making a class, object literal { square, path }
+    discQ.push({ square: startSquare, path: [startSquare] });
+
+    while (discQ.length > 0) {
+        const { square: currSquare, path } = discQ.shift();
+        visited.add(currSquare.name);
+
+        // any path that reaches end, gets recorded
+        if (currSquare.address.isEqual(endSquare.address)) {
+            paths.push(path);
+        }
+
+        currSquare.moves.forEach((point) => {
+            const moveSquare = getSquare(point.x, point.y);
+            if (!visited.has(moveSquare.name)) {
+                discQ.push({
+                    square: moveSquare,
+                    path: [...path, moveSquare],
+                });
+            }
+        });
+    }
+
+    // cl(`\nAll paths from ${startSquare.address} to ${endSquare.address}`);
+    cl(`\nAll paths from ${startSquare} to ${endSquare}`);
+    paths.forEach((path) => {
+        let line = "";
+        path.forEach((square) => {
+            // line += square.address;
+            line += square;
+        });
+        cl(line);
+    });
+}
+
+function bfs(start = [0, 0]) {
+    const out = [];
+    const discQ = [];
+    const visited = new Set();
+    const startSquare = getSquare(start[0], start[1]);
 
     discQ.push(startSquare);
-    // TODO: referance material used this approach
-    // I don't like using object this way
-    // probably want to define a Map()
-    visited[startSquare.name] = true;
 
     while (discQ.length > 0) {
         const currSquare = discQ.shift();
+        visited.add(currSquare.name);
         out.push(currSquare);
 
         currSquare.moves.forEach((point) => {
             const moveSquare = getSquare(point.x, point.y);
-            if (!visited[moveSquare.name]) {
-                visited[moveSquare.name] = true;
+            if (!visited.has(moveSquare.name)) {
+                visited.add(moveSquare.name);
                 discQ.push(moveSquare);
             }
         });
@@ -119,12 +163,6 @@ function knightMoves(start = [0, 0], end = [1, 2]) {
 
 function getSquare(x, y) {
     return board[x][y];
-}
-
-function isInMoves(startPoint, endPoint) {
-    return board[startPoint.x][startPoint.y].moves.some((move) =>
-        endPoint.isEqual(move)
-    );
 }
 
 doStuff();
