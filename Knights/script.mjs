@@ -2,77 +2,30 @@
 
 import { Square, Point } from "./Square.mjs";
 
-console.clear();
 const cl = console.log;
 
 const LEN = 8;
 const board = new Array(LEN);
 
 function doStuff() {
+    console.clear();
+
     createBoard();
     printBoard();
     printMoves();
 
+    let squares = [];
     // knightMoves([3, 3], [4, 3]);
-    knightMoves([0, 0], [1, 2]);
-    knightMoves([0, 0], [3, 3]);
-}
-
-function isInMoves(startPoint, endPoint) {
-    return board[startPoint.x][startPoint.y].moves.some((move) =>
-        endPoint.isEqual(move)
-    );
-}
-
-function knightMoves(start = [0, 0], end = [1, 2]) {
-    const out = [];
-    const discQ = [];
-    const startPoint = new Point(start[0], start[1]);
-    const endPoint = new Point(end[0], end[1]);
-
-    // discQ.push(startPoint);
-
-    // out.push(startPoint);
-    // while (discQ.length > 0) {
-    //     const len = discQ.length;
-
-    //     for (let i = 0; i < len; i++) {
-    //         const point = discQ.shift();
-
-    //         // add moves like they were children
-    //         const moves = board[point.x][point.y].moves;
-    //         moves.forEach((move) => discQ.push(node.left));
-    //     }
-    // }
-    // out.push(endPoint);
-
-    return out;
-}
-
-// TODO: i'm too stupid to make this suck less
-// on second thought, i kind of like the simplicity;
-// define the 8 moves, then flilter out invalid
-function defineMoves(start = [0, 0]) {
-    const moves = [];
-    const point = new Point(start[0], start[1]);
-
-    moves.push(new Point(point.x - 1, point.y + 2));
-    moves.push(new Point(point.x - 1, point.y - 2));
-    moves.push(new Point(point.x + 1, point.y + 2));
-    moves.push(new Point(point.x + 1, point.y - 2));
-    moves.push(new Point(point.x - 2, point.y + 1));
-    moves.push(new Point(point.x - 2, point.y - 1));
-    moves.push(new Point(point.x + 2, point.y + 1));
-    moves.push(new Point(point.x + 2, point.y - 1));
-
-    return moves.filter(
-        (move) => move.x >= 0 && move.x < 8 && move.y >= 0 && move.y < 8
-    );
+    squares = knightMoves([0, 0], [1, 2]);
+    cl(squares.map((sq) => sq.name).join("->"));
+    // squares = knightMoves([0, 0], [3, 3]);
+    // cl(
+    //     squares.reduce((p, c) => p + c.name + "->"),
+    //     ""
+    // );
 }
 
 // the board is an Adjacency List as a 2D array
-// using Square to draw the board, but the real graph functionality
-// just uses the Points as cordinats on chess board
 function createBoard() {
     for (let i = 0; i < LEN; i++) {
         board[i] = new Array(LEN);
@@ -87,6 +40,27 @@ function createBoard() {
         }
     }
     return board;
+}
+
+// TODO: i'm too stupid to make this suck less
+// on second thought, i kind of like the simplicity;
+// define the 8 moves, then flilter out invalid
+function defineMoves(start = [0, 0]) {
+    const moves = [];
+    const startPoint = new Point(start[0], start[1]);
+
+    moves.push(new Point(startPoint.x - 1, startPoint.y + 2));
+    moves.push(new Point(startPoint.x - 1, startPoint.y - 2));
+    moves.push(new Point(startPoint.x + 1, startPoint.y + 2));
+    moves.push(new Point(startPoint.x + 1, startPoint.y - 2));
+    moves.push(new Point(startPoint.x - 2, startPoint.y + 1));
+    moves.push(new Point(startPoint.x - 2, startPoint.y - 1));
+    moves.push(new Point(startPoint.x + 2, startPoint.y + 1));
+    moves.push(new Point(startPoint.x + 2, startPoint.y - 1));
+
+    return moves.filter(
+        (move) => move.x >= 0 && move.x < 8 && move.y >= 0 && move.y < 8
+    );
 }
 
 function printBoard() {
@@ -111,6 +85,46 @@ function printMoves() {
         }
     }
     cl("\r");
+}
+
+// TODO: first pass, full bfs ignoring end
+function knightMoves(start = [0, 0], end = [1, 2]) {
+    const out = [];
+    const discQ = [];
+    const visited = {};
+    const startSquare = getSquare(start[0], start[1]);
+    const endSquare = getSquare(end[0], end[1]);
+
+    discQ.push(startSquare);
+    // TODO: referance material used this approach
+    // I don't like using object this way
+    // probably want to define a Map()
+    visited[startSquare.name] = true;
+
+    while (discQ.length > 0) {
+        const currSquare = discQ.shift();
+        out.push(currSquare);
+
+        currSquare.moves.forEach((point) => {
+            const moveSquare = getSquare(point.x, point.y);
+            if (!visited[moveSquare.name]) {
+                visited[moveSquare.name] = true;
+                discQ.push(moveSquare);
+            }
+        });
+    }
+
+    return out;
+}
+
+function getSquare(x, y) {
+    return board[x][y];
+}
+
+function isInMoves(startPoint, endPoint) {
+    return board[startPoint.x][startPoint.y].moves.some((move) =>
+        endPoint.isEqual(move)
+    );
 }
 
 doStuff();
